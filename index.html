@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Ghép Chữ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Ping Monitor - Only in game -->
+    <div id="ping-monitor" class="hidden">
+        <span class="ping-dot"></span>
+        <span id="ping-text">Đang đo...</span>
+    </div>
+
+    <!-- Network Lag Warning -->
+    <div id="lag-warning" class="hidden">
+        <div class="lag-spinner"></div>
+        <p>⚠️ Mạng lag quá 1000ms!</p>
+    </div>
+
+    <!-- Main Menu (Auth) -->
+    <div id="main-menu" class="main-menu">
+        <div class="menu-box">
+            <div class="menu-header">
+                <h1>🎮 TRÒ CHƠI GHÉP CHỮ</h1>
+                <p>ĐƯỢC CODE BỞI : Nguyễn Chí Dự</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form active">
+                <h2>🔐 Đăng Nhập</h2>
+                <div class="input-group">
+                    <input type="text" id="login-username" placeholder="Tên đăng nhập" maxlength="20">
+                    <span class="input-icon">👤</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder="Mật khẩu" maxlength="20">
+                    <span class="input-icon">🔒</span>
+                    <button type="button" class="toggle-password" onclick="Auth.togglePassword('login-password')">👁️</button>
+                </div>
+                <button class="auth-btn login-btn" onclick="Auth.login()">
+                    <span>🚀 Đăng Nhập</span>
+                </button>
+                <p class="auth-switch">
+                    Chưa có tài khoản? 
+                    <a href="#" onclick="Auth.showRegister()">Đăng ký ngay</a>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form">
+                <h2>📝 Đăng Ký</h2>
+                <div class="input-group">
+                    <input type="text" id="reg-username" placeholder="Tên đăng nhập" maxlength="20">
+                    <span class="input-icon">👤</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="reg-password" placeholder="Mật khẩu" maxlength="20">
+                    <span class="input-icon">🔒</span>
+                    <button type="button" class="toggle-password" onclick="Auth.togglePassword('reg-password')">👁️</button>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="reg-confirm" placeholder="Xác nhận mật khẩu" maxlength="20">
+                    <span class="input-icon">🔐</span>
+                </div>
+                <button class="auth-btn register-btn" onclick="Auth.register()">
+                    <span>✨ Tạo Tài Khoản</span>
+                </button>
+                <p class="auth-switch">
+                    Đã có tài khoản? 
+                    <a href="#" onclick="Auth.showLogin()">Đăng nhập</a>
+                </p>
+            </div>
+
+            <div class="menu-footer">
+                <p>MADE in VN 🇻🇳</p>
+                <p>Made by : Nguyễn Chí Dự</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container (Hidden until login) -->
+    <div id="game-container" class="container hidden">
+        <!-- User Bar -->
+        <div class="user-bar">
+            <div class="user-info">
+                <span class="user-avatar">👤</span>
+                <span id="current-user">Guest</span>
+            </div>
+            <button class="logout-btn" onclick="Auth.confirmLogout()">🚪 Đăng Xuất</button>
+        </div>
+
+        <!-- Gift Box -->
+        <div class="gift-box-container" onclick="Game.openGiftBox()">
+            <div class="gift-box" id="gift-box">
+                <span class="gift-icon">🎁</span>
+                <span class="gift-text">Mở Quà!</span>
+                <span class="gift-timer" id="gift-timer"></span>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header>
+            <h1>TRÒ CHƠI GHÉP CHỮ</h1>
+            <h2>ĐƯỢC CODE BỞI : Nguyễn Chí Dự</h2>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-icon">⭐</span>
+                <span>Điểm: <strong id="score">0</strong></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🪙</span>
+                <span>Coin: <strong id="coins">0</strong></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🔥</span>
+                <span>Streak: <strong id="streak">0</strong></span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" data-tab="game">🎮 Chơi Game</button>
+            <button class="tab-btn" data-tab="shop">🛒 Cửa Hàng</button>
+            <button class="tab-btn" data-tab="checkin">📅 Điểm Danh</button>
+            <button class="tab-btn" data-tab="words">📚 Quản Lý Từ</button>
+        </div>
+
+        <!-- Game Tab -->
+        <div id="game-tab" class="tab-content active">
+            <div class="game-area">
+                <div class="word-display" id="word-display">
+                    <div class="scrambled-letters" id="scrambled-letters"></div>
+                    <div class="answer-slots" id="answer-slots"></div>
+                </div>
+                
+                <div class="game-controls">
+                    <button id="shuffle-btn" class="btn-secondary">🔀 Xáo Trộn</button>
+                    <button id="hint-btn" class="btn-secondary">💡 Gợi Ý (-50 điểm)</button>
+                    <button id="skip-btn" class="btn-secondary">⏭️ Bỏ Qua (-10 điểm)</button>
+                </div>
+
+                <div class="input-area">
+                    <input type="text" id="word-input" placeholder="Nhập đáp án..." maxlength="20">
+                    <button id="submit-btn" class="btn-primary">✅ Kiểm Tra</button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                    <span class="progress-text">Tiến độ: <span id="progress-text">0/0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Tab -->
+        <div id="shop-tab" class="tab-content">
+            <div class="shop-header">
+                <h3>🛒 CỬA HÀNG VẬT PHẨM</h3>
+                <p>Đổi điểm lấy coin hoặc mua vật phẩm đặc biệt!</p>
+            </div>
+
+            <div class="exchange-section">
+                <h4>💱 Đổi Điểm</h4>
+                <div class="exchange-options">
+                    <button class="exchange-btn" data-points="100" data-coins="10">
+                        <span>100 Điểm</span>
+                        <span>→</span>
+                        <span>10 Coin 🪙</span>
+                    </button>
+                    <button class="exchange-btn" data-points="500" data-coins="60">
+                        <span>500 Điểm</span>
+                        <span>→</span>
+                        <span>60 Coin 🪙</span>
+                    </button>
+                    <button class="exchange-btn" data-points="1000" data-coins="150">
+                        <span>1000 Điểm</span>
+                        <span>→</span>
+                        <span>150 Coin 🪙</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="shop-items" id="shop-items"></div>
+        </div>
+
+        <!-- Checkin Tab -->
+        <div id="checkin-tab" class="tab-content">
+            <div class="checkin-header">
+                <h3>📅 ĐIỂM DANH NHẬN COIN</h3>
+                <p>Điểm danh mỗi ngày để nhận coin miễn phí!</p>
+                <p class="checkin-streak">Chuỗi ngày: <strong id="streak-days">0</strong>/7</p>
+            </div>
+
+            <div class="checkin-calendar" id="checkin-calendar">
+                <!-- Generated by JS - Only show available days -->
+            </div>
+
+            <div class="checkin-info">
+                <p>🎁 Ngày 7: Nhận thưởng đặc biệt!</p>
+                <p>⏰ Reset sau: <span id="reset-timer">--:--:--</span></p>
+            </div>
+        </div>
+
+        <!-- Words Tab -->
+        <div id="words-tab" class="tab-content">
+            <div class="words-header">
+                <h3>📚 QUẢN LÝ TỪ VỰNG</h3>
+                <div class="add-word-form">
+                    <input type="text" id="new-word" placeholder="Nhập từ mới..." maxlength="20">
+                    <input type="text" id="word-hint" placeholder="Gợi ý (tùy chọn)...">
+                    <button id="add-word-btn" class="btn-primary">➕ Thêm Từ</button>
+                </div>
+            </div>
+            
+            <div class="words-filter">
+                <button class="filter-btn active" data-filter="all">Tất cả</button>
+                <button class="filter-btn" data-filter="easy">Dễ (3-4 chữ)</button>
+                <button class="filter-btn" data-filter="medium">Trung bình (5-6 chữ)</button>
+                <button class="filter-btn" data-filter="hard">Khó (7+ chữ)</button>
+            </div>
+
+            <div class="words-list" id="words-list"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p class="made-in">MADE in VN 🇻🇳</p>
+            <p class="author">Made by : Nguyễn Chí Dự</p>
+            <p class="copyright">© Bản quyền website thuộc về : Nguyễn Chí Dự</p>
+        </footer>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="confirm-title">Xác nhận</h3>
+            <p id="confirm-message">Bạn có chắc chắn?</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="Game.closeModal()">❌ Hủy</button>
+                <button class="btn-confirm" id="confirm-btn" onclick="">✅ Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Sad Modal -->
+    <div id="logout-modal" class="modal hidden">
+        <div class="modal-content logout-content">
+            <div class="sad-emoji">😢</div>
+            <h3>Tạm biệt nhé!</h3>
+            <p id="logout-message">Bạn đã đăng xuất thành công. Hẹn gặp lại!</p>
+            <div class="logout-reason">
+                <p>💔 Lý do bạn rời đi:</p>
+                <div class="reason-options">
+                    <button class="reason-btn" onclick="Auth.completeLogout('Mệt mỏi')">😫 Mệt mỏi</button>
+                    <button class="reason-btn" onclick="Auth.completeLogout('Buồn ngủ')">😴 Buồn ngủ</button>
+                    <button class="reason-btn" onclick="Auth.completeLogout('Có việc gấp')">🏃 Có việc gấp</button>
+                    <button class="reason-btn" onclick="Auth.completeLogout('Game khó quá')">😤 Game khó quá</button>
+                    <button class="reason-btn" onclick="Auth.completeLogout('Không có lý do')">🤷 Không có lý do</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gift Open Modal -->
+    <div id="gift-modal" class="modal hidden">
+        <div class="modal-content gift-content">
+            <div class="gift-animation">🎁</div>
+            <h3>Chúc mừng!</h3>
+            <p>Bạn nhận được <strong id="gift-amount">0</strong> Coin! 🪙</p>
+            <button class="btn-primary" onclick="Game.closeGiftModal()">Nhận Thưởng</button>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script src="script.js"></script>
+</body>
+  </html>
+                                                           
